@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.All-Container {
+    border-radius: 20px;
+    width: 90vw;
+    max-width: 1000px;
+    height: 600px;
+    box-sizing: border-box;
+    background-color: #2a2a3e;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    overflow: hidden;
+}
+
+.Image-left {
+    flex: 1;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    position: relative;
+}
+
+.Image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.Registerform-right {
+    flex: 1;
+    background-color: #2a2a3e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.BoxRegister {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.Title {
+    font-size: 48px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.UsernameSection, .PasswordSection .ConfirmPasswordSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.Username-Text, .Password-Text {
+    font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #a8a8b3;
+    font-weight: 500;
+}
+
+.textfield {
+    width: 100%;
+    height: 50px;
+    border-radius: 12px;
+    padding: 0 20px;
+    border: 1px solid #404040;
+    background-color: #3a3a52;
+    color: white;
+    font-size: 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.textfield:focus {
+    outline: none;
+    border-color: #6c5ce7;
+    background-color: #404063;
+}
+
+.textfield::placeholder {
+    color: #666;
+}
+
+.Register-Button {
+    margin-top: 10px;
+}
+
+.Register-Button button {
+    width: 100%;
+    height: 50px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.Register-Button button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+}
+
+.GoToLogin {
+    font-family: 'Montserrat';
+    color: white;
+    cursor: pointer;
+    text-underline-position: below;
+    text-decoration: underline;
+}
