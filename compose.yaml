@@ -35,10 +35,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - JWT_SECRET=d617fb267f8aec5ac0434ee5d26e74e7
-    env_file:
-      - ./backend/finexcel/.env
+      - DATABASE_URL=postgresql://postgres:12345678@db:5432/finexcelweb
+      - NODE_ENV=development
     volumes:
-      - ./backend/finexcel:/app
+      - ./backend/finexcel/src:/app/src
+      - ./backend/finexcel/prisma:/app/prisma
+      - /app/node_modules
     image: finexcel-backend
     depends_on:
       - db
