@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: finexcelweb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - finexcel-net
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - finexcel-net
+
+  backend:
+    build:
+      context: ./backend/finexcel
+      dockerfile: Dockerfile
+    environment:
+      - JWT_SECRET=d617fb267f8aec5ac0434ee5d26e74e7
+    env_file:
+      - ./backend/finexcel/.env
+    volumes:
+      - ./backend/finexcel:/app
+    image: finexcel-backend
+    depends_on:
+      - db
+    restart: unless-stopped
+    ports:
+      - "5555:3000"
+    networks:
+      - finexcel-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: finexcel-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    networks:
+      - finexcel-net
+
+volumes:
+  db-data:
+  pgadmin-data:
+
+networks:
+  finexcel-net:
