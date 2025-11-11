@@ -1,21 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
-* {
+body {
+    margin: 0;
+}
+
+.dashboard-page * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html, body {
-    height: 100%;
+.dashboard-page {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background: #1a1a2e;
     color: white;
-    overflow-x: hidden;
-}
-
-#root {
-    height: 100%;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
 .dashboard-container {
@@ -24,6 +25,8 @@ html, body {
     width: 100vw;
     background-color: #1a1a2e;
     overflow: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: white;
 }
 
 .sidebar {

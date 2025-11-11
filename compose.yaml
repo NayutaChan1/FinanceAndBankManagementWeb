@@ -5,24 +5,24 @@ services:
     image: postgres:14-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345678
-      POSTGRES_DB: finexcelweb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - db-data:/var/lib/postgresql/data
     networks:
       - finexcel-net
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
 
   pgadmin:
     image: dpage/pgadmin4
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT}:80"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
@@ -34,9 +34,9 @@ services:
       context: ./backend/finexcel
       dockerfile: Dockerfile
     environment:
-      - JWT_SECRET=d617fb267f8aec5ac0434ee5d26e74e7
-      - DATABASE_URL=postgresql://postgres:12345678@db:5432/finexcelweb
-      - NODE_ENV=development
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=${NODE_ENV}
     volumes:
       - ./backend/finexcel/src:/app/src
       - ./backend/finexcel/prisma:/app/prisma
@@ -46,18 +46,24 @@ services:
       - db
     restart: unless-stopped
     ports:
-      - "5555:3000"
+      - "${BACKEND_PORT}:3000"
     networks:
       - finexcel-net
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    image: finexcel-frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      - NODE_ENV=${NODE_ENV}
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    image: finexcel-frontend-dev
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT}:5173"
     networks:
       - finexcel-net
 

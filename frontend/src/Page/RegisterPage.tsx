@@ -42,7 +42,8 @@ function RegisterPage() {
     }
 
     return(
-        <div className='All-Container'>
+        <div className='register-page'>
+            <div className='All-Container'>
             <div className='Image-left'>
                 <img src={image} alt="" className='Image'/>
                 <h2 style={{color: 'white', textAlign: 'center', fontFamily: 'Montserrat', fontSize: '32px', fontWeight: '600'}}>
@@ -128,6 +129,7 @@ function RegisterPage() {
                     </Link>
                 </div>
             </div>
+        </div>
         </div>
     )
 }

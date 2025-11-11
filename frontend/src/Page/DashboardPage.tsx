@@ -16,7 +16,8 @@ function DashboardPage() {
     };
 
     return (
-        <div className='dashboard-container'>
+        <div className='dashboard-page'>
+            <div className='dashboard-container'>
             <div className='sidebar'>
                 <div className='logo-section'>
                     <div className='logo'>NB</div>
@@ -52,7 +53,7 @@ function DashboardPage() {
                         <div className='user-profile'>
                             <div className='user-avatar'></div>
                             <div className='user-info'>
-                                <span>Dwayne Tatum</span>
+                                <span>Jojo Chritina Wongsy</span>
                                 <span>CEO Assistant</span>
                             </div>
                         </div>
@@ -185,6 +186,7 @@ function DashboardPage() {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }
