@@ -29,24 +29,61 @@ services:
     networks:
       - finexcel-net
 
-  backend:
+  api-gateway:
     build:
-      context: ./backend/finexcel
+      context: ./backend2/api-gateway
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - USER_SERVICE_HOST=user-service
+      - USER_SERVICE_PORT=8888
+      - AUTH_SERVICE_HOST=auth-service
+      - AUTH_SERVICE_PORT=8889
+      - PORT=5555
+    volumes:
+      - ./backend2/api-gateway/src:/app/src
+      - /app/node_modules
+    depends_on:
+      - auth-service
+      - user-service
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-5555}:5555"
+    networks:
+      - finexcel-net
+
+  auth-service:
+    build:
+      context: ./backend2/auth-service
       dockerfile: Dockerfile
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=${NODE_ENV}
+      - PORT=8889
     volumes:
-      - ./backend/finexcel/src:/app/src
-      - ./backend/finexcel/prisma:/app/prisma
+      - ./backend2/auth-service/src:/app/src
       - /app/node_modules
-    image: finexcel-backend
     depends_on:
       - db
     restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT}:3000"
+    networks:
+      - finexcel-net
+
+  user-service:
+    build:
+      context: ./backend2/user-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=8888
+    volumes:
+      - ./backend2/user-service/src:/app/src
+      - ./backend2/user-service/prisma:/app/prisma
+      - /app/node_modules
+    depends_on:
+      - db
+    restart: unless-stopped
     networks:
       - finexcel-net
 

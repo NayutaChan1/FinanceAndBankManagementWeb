@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Users {
+  userid    Int      @id @default(autoincrement())
+  username  String?
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          Int      // Link this to your existing Users table
+  
+  // Core Bank Data
+  transactionDate DateTime
+  description     String   @db.Text // E.g., "TRF E-BANKING DB 12345 SHOPEEPAY"
+  type            TransType // DEBIT (Money Out) or CREDIT (Money In)
+  amount          Decimal  @db.Decimal(15, 2) 
+  balance         Decimal? @db.Decimal(15, 2) // Optional: The running balance after transaction
+  
+  // Analysis Data (The secret sauce for your app)
+  category        String?  // E.g., "Food", "Salary", "Transport"
+  isIgnored       Boolean  @default(false) // Useful if you want to exclude internal transfers from analysis
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // user         Users    @relation(fields: [userId], references: [userid])
+}
+
+enum TransType {
+  DEBIT   // Uang Keluar (Expenses)
+  CREDIT  // Uang Masuk (Income)
+}
