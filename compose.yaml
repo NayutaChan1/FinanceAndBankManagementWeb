@@ -39,6 +39,8 @@ services:
       - USER_SERVICE_PORT=8888
       - AUTH_SERVICE_HOST=auth-service
       - AUTH_SERVICE_PORT=8889
+      - TRANSACTION_SERVICE_HOST=transaction-service
+      - TRANSACTION_SERVICE_PORT=8890
       - PORT=5555
     volumes:
       - ./backend2/api-gateway/src:/app/src
@@ -46,6 +48,7 @@ services:
     depends_on:
       - auth-service
       - user-service
+      - transaction-service
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-5555}:5555"
@@ -80,6 +83,25 @@ services:
     volumes:
       - ./backend2/user-service/src:/app/src
       - ./backend2/user-service/prisma:/app/prisma
+      - /app/node_modules
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - finexcel-net
+
+  transaction-service:
+    build:
+      context: ./backend2/transaction-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=8890
+    volumes:
+      - ./backend2/transaction-service/src:/app/src
+      - ./backend2/transaction-service/prisma:/app/prisma
       - /app/node_modules
     depends_on:
       - db

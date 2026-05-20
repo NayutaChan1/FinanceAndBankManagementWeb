@@ -26,6 +26,16 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             : 8889,
         },
       },
+      {
+        name: 'TRANSACTION_CLIENT',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.TRANSACTION_SERVICE_HOST || 'transaction-service',
+          port: process.env.TRANSACTION_SERVICE_PORT
+            ? parseInt(process.env.TRANSACTION_SERVICE_PORT)
+            : 8890,
+        },
+      },
     ]),
   ],
   controllers: [AppController],

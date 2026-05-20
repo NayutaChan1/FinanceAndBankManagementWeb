@@ -1,4 +1,6 @@
-function sidebar({ activeMenu }: { activeMenu: string }) {
+import { Link } from "react-router-dom";
+
+function Sidebar({ activeMenu }: { activeMenu: string }) {
   return (
     <div className="sidebar">
       <div className="logo-section">
@@ -11,32 +13,48 @@ function sidebar({ activeMenu }: { activeMenu: string }) {
       </div>
 
       <nav className="nav-menu">
-        <div
+        <Link
+          to="/dashboard"
           className={`nav-item ${activeMenu === "dashboard" ? "active" : ""}`}
+          style={{ textDecoration: "none" }}
         >
           Dashboard
-        </div>
+        </Link>
 
-        <div
+        <Link
+          to="/transactions"
           className={`nav-item ${activeMenu === "transactions" ? "active" : ""}`}
+          style={{ textDecoration: "none" }}
         >
           Transactions
-        </div>
+        </Link>
 
-        <div
+        <Link
+          to="/analytics"
           className={`nav-item ${activeMenu === "analytics" ? "active" : ""}`}
+          style={{ textDecoration: "none" }}
         >
           Analytics
-        </div>
+        </Link>
 
-        <div
+        <Link
+          to="/settings"
           className={`nav-item ${activeMenu === "settings" ? "active" : ""}`}
+          style={{ textDecoration: "none" }}
         >
           Settings
-        </div>
+        </Link>
+
+        <Link
+          to="/uploadfile"
+          className={`nav-item ${activeMenu === "uploadfile" ? "active" : ""}`}
+          style={{ textDecoration: "none" }}
+        >
+          Upload
+        </Link>
       </nav>
     </div>
   );
 }
 
-export default sidebar;
+export default Sidebar;
