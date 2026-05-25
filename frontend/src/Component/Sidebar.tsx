@@ -38,11 +38,11 @@ function Sidebar({ activeMenu }: { activeMenu: string }) {
         </Link>
 
         <Link
-          to="/settings"
-          className={`nav-item ${activeMenu === "settings" ? "active" : ""}`}
+          to="/goals"
+          className={`nav-item ${activeMenu === "goals" ? "active" : ""}`}
           style={{ textDecoration: "none" }}
         >
-          Settings
+          Goals
         </Link>
 
         <Link

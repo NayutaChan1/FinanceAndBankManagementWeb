@@ -1,19 +1,87 @@
-import { useEffect } from "react";
-import "../Css/DashboardPage.css";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../Component/Sidebar";
+import "../Css/FinancialDashboard.css";
+import {
+  financeApi,
+  formatMoney,
+  type SummaryResponse,
+  type TrendPoint,
+} from "../services/financeApi";
+
+function readStoredUser(): { username?: string; email?: string } | null {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    return JSON.parse(raw) as { username?: string; email?: string };
+  } catch {
+    return null;
+  }
+}
 
 function DashboardPage() {
-  // useEffect(() => {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) {
-  //         window.location.href = '/';
-  //     }
-  // }, []);
+  const [summary, setSummary] = useState<SummaryResponse | null>(null);
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const storedUser = useMemo(readStoredUser, []);
+  const displayName = storedUser?.username || storedUser?.email || "Dashboard User";
+  const initials = (displayName.match(/\b\w/g) ?? []).slice(0, 2).join("").toUpperCase() || "U";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDashboard = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const [summaryResponse, trendResponse] = await Promise.all([
+          financeApi.getSummary(),
+          financeApi.getTrend(6),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSummary(summaryResponse);
+        setTrend(trendResponse.data);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+
+        const message =
+          loadError instanceof Error ? loadError.message : "Failed to load dashboard";
+        setError(message);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     window.location.href = "/";
   };
+
+  const monthlyTrend = trend;
+  const chartMax = Math.max(
+    1,
+    ...monthlyTrend.flatMap((point) => [point.income, point.expense]),
+  );
+  const linePath = (key: "income" | "expense") =>
+    buildLinePath(monthlyTrend, key, chartMax);
 
   return (
     <div className="dashboard-page">
@@ -24,23 +92,16 @@ function DashboardPage() {
           <header className="dashboard-header">
             <div className="header-left">
               <h1>Financial Dashboard</h1>
-              <div className="date-info">
-                <span className="day">19</span>
-                <div className="date-text">
-                  <span>Tue,</span>
-                  <span>December</span>
-                </div>
-              </div>
+              <p className="header-copy">
+                Track balance, cash flow, and savings targets from one place.
+              </p>
             </div>
             <div className="header-right">
-              <div className="search-box">
-                <input type="text" placeholder="Start searching here..." />
-              </div>
               <div className="user-profile">
-                <div className="user-avatar"></div>
+                <div className="user-avatar user-avatar-initials">{initials}</div>
                 <div className="user-info">
-                  <span>Jojo Chritina Wongsy</span>
-                  <span>CEO Assistant</span>
+                  <span>{displayName}</span>
+                  <span>{storedUser?.email ?? "Financial overview"}</span>
                 </div>
               </div>
               <button onClick={handleLogout} className="logout-btn">
@@ -49,134 +110,226 @@ function DashboardPage() {
             </div>
           </header>
 
-          <div className="dashboard-grid">
-            <div className="card account-card">
-              <div className="card-header">
-                <span>VISA</span>
-                <span>Direct Debits</span>
+          <section className="summary-grid">
+            <StatCard
+              label="Total Balance"
+              value={summary?.totalBalance ?? 0}
+              tone="balance"
+              detail="Across all transactions"
+            />
+            <StatCard
+              label="Monthly Income"
+              value={summary?.monthlyIncome ?? 0}
+              tone="income"
+              detail="Credits this month"
+            />
+            <StatCard
+              label="Monthly Expenses"
+              value={summary?.monthlyExpenses ?? 0}
+              tone="expense"
+              detail="Debits this month"
+            />
+            <StatCard
+              label="Savings This Month"
+              value={summary?.savingsOverview.savingsAmount ?? 0}
+              tone="neutral"
+              detail={`${Math.round((summary?.savingsOverview.savingsRate ?? 0) * 100)}% of income saved`}
+            />
+          </section>
+
+          {error ? <div className="empty-state">{error}</div> : null}
+
+          <section className="dashboard-grid">
+            <div className="chart-panel">
+              <div className="panel-header">
+                <div>
+                  <h2 className="panel-title">Cash Flow Trend</h2>
+                  <p className="panel-subtitle">
+                    Income and expenses across the last six months.
+                  </p>
+                </div>
+                <div className="chart-legend-inline">
+                  <span className="legend-dot legend-income" />
+                  <span>Income</span>
+                  <span className="legend-dot legend-expense" />
+                  <span>Expense</span>
+                </div>
               </div>
-              <div className="account-number">**** 2719</div>
-              <div className="card-actions">
-                <button className="btn-primary">Receive</button>
-                <button className="btn-secondary">Send</button>
-              </div>
-              <div className="monthly-fee">
-                <span>Monthly regular fee</span>
-                <span>$ 25.00</span>
-              </div>
+
+              {isLoading ? (
+                <div className="loading-state">Loading chart data...</div>
+              ) : monthlyTrend.every((p) => p.income === 0 && p.expense === 0) ? (
+                <div className="empty-state">No transactions in the last 6 months yet.</div>
+              ) : (
+                <div className="chart-frame">
+                  <svg
+                    className="trend-chart"
+                    viewBox="0 0 860 320"
+                    role="img"
+                    aria-label="Monthly cash flow chart"
+                  >
+                    <defs>
+                      <linearGradient id="incomeLine" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stopColor="#7cda7b" />
+                        <stop offset="100%" stopColor="#5bd6ff" />
+                      </linearGradient>
+                      <linearGradient id="expenseLine" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stopColor="#f97316" />
+                        <stop offset="100%" stopColor="#ef4444" />
+                      </linearGradient>
+                    </defs>
+                    <rect
+                      x="0"
+                      y="0"
+                      width="860"
+                      height="320"
+                      rx="22"
+                      fill="rgba(8,15,31,0.45)"
+                    />
+                    {buildGridLines(860, 320).map((line) => (
+                      <line
+                        key={line.key}
+                        x1={line.x1}
+                        y1={line.y1}
+                        x2={line.x2}
+                        y2={line.y2}
+                        stroke="rgba(148,163,184,0.12)"
+                      />
+                    ))}
+                    <path
+                      d={linePath("income")}
+                      fill="none"
+                      stroke="url(#incomeLine)"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d={linePath("expense")}
+                      fill="none"
+                      stroke="url(#expenseLine)"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {monthlyTrend.map((point, index) => {
+                      const x = 70 + (index * 720) / Math.max(1, monthlyTrend.length - 1);
+                      return (
+                        <g key={point.label}>
+                          <circle cx={x} cy={chartPointY(point.income, chartMax)} r="5" fill="#7cda7b" />
+                          <circle cx={x} cy={chartPointY(point.expense, chartMax)} r="5" fill="#ef4444" />
+                          <text x={x} y="295" textAnchor="middle" fill="#8ea0b6" fontSize="14">
+                            {point.label}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              )}
             </div>
 
-            <div className="card income-card">
-              <div className="metric">
-                <span>Your income</span>
-                <span className="amount">$ 23,194.80</span>
+            <div className="panel">
+              <div className="panel-header">
+                <div>
+                  <h2 className="panel-title">Financial Snapshot</h2>
+                  <p className="panel-subtitle">Summary and planning metrics from your goals.</p>
+                </div>
               </div>
-              <div className="metric">
-                <span>Total paid</span>
-                <span className="amount">$ 8,145.20</span>
-              </div>
-            </div>
 
-            <div className="card help-card">
-              <h3>Hey, Need help?</h3>
-              <p>Just ask me anything!</p>
-              <div className="help-actions">
-                <span>Weekly</span>
-                <div className="system-lock">
-                  <span>System Lock</span>
-                  <div className="days-info">
-                    <span>13 Days</span>
-                    <span>109 hours, 23 minutes</span>
+              <div className="stacked-list">
+                <div className="stacked-item">
+                  <div>
+                    <strong>Monthly Savings</strong>
+                    <span>{formatMoney(summary?.savingsOverview.savingsAmount ?? 0)}</span>
                   </div>
+                  <span className="pill">
+                    {Math.round((summary?.savingsOverview.savingsRate ?? 0) * 100)}%
+                  </span>
                 </div>
-              </div>
-            </div>
-
-            <div className="card progress-card">
-              <div className="circular-progress">
-                <div className="progress-circle">
-                  <span>38%</span>
-                  <span>Annual limit</span>
-                </div>
-              </div>
-              <div className="progress-amount">$ 16,073.49</div>
-            </div>
-
-            <div className="card profits-card">
-              <h3>Annual profits</h3>
-              <div className="profit-chart">
-                <div className="chart-circle large">
-                  <span>$ 14K</span>
-                  <div className="inner-circle medium">
-                    <span>$ 9.3K</span>
-                    <div className="inner-circle small">
-                      <span>$ 6.8K</span>
-                      <div className="center-circle">
-                        <span>$ 4K</span>
-                      </div>
-                    </div>
+                <div className="stacked-item">
+                  <div>
+                    <strong>Goal Target</strong>
+                    <span>{formatMoney(summary?.savingsOverview.totalGoalTarget ?? 0)}</span>
                   </div>
+                  <span className="pill">Goals</span>
+                </div>
+                <div className="stacked-item">
+                  <div>
+                    <strong>Goal Completion</strong>
+                    <span>{formatMoney(summary?.savingsOverview.totalGoalCurrent ?? 0)}</span>
+                  </div>
+                  <span className="pill">
+                    {Math.round((summary?.savingsOverview.goalCompletionRate ?? 0) * 100)}%
+                  </span>
                 </div>
               </div>
             </div>
-
-            <div className="card activity-card">
-              <div className="activity-header">
-                <h3>Activity manager</h3>
-                <div className="activity-tabs">
-                  <span>Team</span>
-                  <span>Insights</span>
-                  <span>Today</span>
-                </div>
-              </div>
-              <div className="activity-chart">
-                <div className="chart-value">$ 43.20</div>
-                <div className="chart-bars">
-                  <div className="bar"></div>
-                  <div className="bar"></div>
-                  <div className="bar active"></div>
-                  <div className="bar"></div>
-                  <div className="bar"></div>
-                </div>
-              </div>
-              <div className="activity-items">
-                <div className="activity-item">Business plans</div>
-                <div className="activity-item">Bank loans</div>
-                <div className="activity-item">Accounting</div>
-                <div className="activity-item">HR management</div>
-              </div>
-            </div>
-
-            <div className="card stocks-card">
-              <h3>Main Stocks</h3>
-              <span>Extended Limited</span>
-              <div className="stock-chart">
-                <div className="chart-line"></div>
-              </div>
-              <div className="stock-change">+ 9.3%</div>
-            </div>
-
-            <div className="card verification-card">
-              <h3>Wallet Verification</h3>
-              <p>We need 2-step verification to secure your account</p>
-              <button className="btn-primary">Enable</button>
-            </div>
-
-            <div className="card business-card">
-              <h3>How is your business management going?</h3>
-              <div className="rating-stars">
-                <div className="star"></div>
-                <div className="star"></div>
-                <div className="star"></div>
-                <div className="star"></div>
-                <div className="star"></div>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>
   );
+}
+
+function StatCard({
+  label,
+  value,
+  detail,
+  suffix = '',
+  tone,
+}: {
+  label: string;
+  value: number;
+  detail?: string;
+  suffix?: string;
+  tone: 'balance' | 'income' | 'expense' | 'neutral';
+}) {
+  const toneClass =
+    tone === 'income' ? 'amount-positive' : tone === 'expense' ? 'amount-negative' : '';
+
+  return (
+    <article className="summary-card stat-card">
+      <span className="summary-label">{label}</span>
+      <strong className={`summary-value ${toneClass}`}>{formatMoney(value)}</strong>
+      <span className="summary-detail">{detail ?? suffix}</span>
+    </article>
+  );
+}
+
+function buildLinePath(
+  trend: Array<{ income: number; expense: number }>,
+  key: 'income' | 'expense',
+  maxValue: number,
+) {
+  const usableWidth = 720;
+  const offsetX = 70;
+  const baseline = 252;
+
+  return trend
+    .map((point, index) => {
+      const x = offsetX + (index * usableWidth) / Math.max(1, trend.length - 1);
+      const y = chartPointY(point[key], maxValue, baseline);
+
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    })
+    .join(' ');
+}
+
+function chartPointY(value: number, maxValue: number, baseline = 252) {
+  const chartHeight = 180;
+  const normalized = maxValue > 0 ? value / maxValue : 0;
+  return baseline - normalized * chartHeight;
+}
+
+function buildGridLines(width: number, height: number) {
+  return [1, 2, 3, 4].map((step) => ({
+    key: step,
+    x1: 60,
+    y1: (height / 5) * step,
+    x2: width - 40,
+    y2: (height / 5) * step,
+  }));
 }
 
 export default DashboardPage;

@@ -28,6 +28,16 @@ model Transaction {
   updatedAt       DateTime @updatedAt
 }
 
+model Goal {
+  id            String   @id @default(uuid())
+  userId        Int
+  name          String   @db.VarChar(255)
+  targetAmount  Decimal  @db.Decimal(15, 2)
+  currentAmount Decimal  @default(0) @db.Decimal(15, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 enum TransType {
   DEBIT
   CREDIT

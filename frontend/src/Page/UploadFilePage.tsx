@@ -2,9 +2,17 @@ import { useState } from "react";
 import Sidebar from "../Component/Sidebar";
 import * as XLSX from "xlsx";
 import "../Css/UploadFilePage.css";
+import "../Css/FinancialDashboard.css";
+type DateFormat = 'DMY' | 'MDY';
+
 function UploadFilePage() {
+  const currentYear = new Date().getFullYear();
   const [file, setFile] = useState<File | null>(null);
+  const [year, setYear] = useState<number>(currentYear);
+  const [dateFormat, setDateFormat] = useState<DateFormat>('DMY');
   const [isLoading, setIsLoading] = useState(false);
+
+  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -57,7 +65,7 @@ function UploadFilePage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ transactions: jsonData }),
+            body: JSON.stringify({ transactions: jsonData, year, dateFormat }),
           },
         );
 
@@ -85,6 +93,39 @@ function UploadFilePage() {
           <div className="upload-content">
             <h2>Upload Bank Statement</h2>
             <p>Select your EZMutasi Excel file to analyze your finances.</p>
+
+            <div className="upload-year-field">
+              <label htmlFor="upload-year" className="upload-year-label">
+                Statement Year
+              </label>
+              <select
+                id="upload-year"
+                className="upload-year-select"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="upload-year-field">
+              <label htmlFor="upload-date-format" className="upload-year-label">
+                Date Format in Excel
+              </label>
+              <select
+                id="upload-date-format"
+                className="upload-year-select"
+                value={dateFormat}
+                onChange={(e) => setDateFormat(e.target.value as DateFormat)}
+              >
+                <option value="DMY">DD/MM (day first — Indonesian / EZMutasi)</option>
+                <option value="MDY">MM/DD (month first — US format)</option>
+              </select>
+            </div>
 
             <div className="upload-area">
               <input

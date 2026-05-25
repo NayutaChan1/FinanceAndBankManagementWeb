@@ -19,6 +19,15 @@ function LoginPage(){
             const result = await authService.login(username, password);
             console.log("Login success", result);
             localStorage.setItem('token', result.access_token);
+            if (result.user) {
+                localStorage.setItem(
+                    'user',
+                    JSON.stringify({
+                        username: result.user.username,
+                        email: result.user.email,
+                    }),
+                );
+            }
             navigate('/dashboard')
         } catch (err) {
             const error2 = err as Error;
